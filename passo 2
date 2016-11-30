@@ -1,0 +1,26 @@
+#! /bin/bash
+
+echo "Step 2 - Install dependencies for Odoo 10"
+
+#Install python development tools and native dependencies
+sudo apt-get install python-dev libxml2-dev libxslt1-dev zlib1g-dev -y
+sudo apt-get install libevent-dev libsasl2-dev -y
+
+#Install python dependencies
+sudo apt-get install python-cups python-dateutil python-decorator python-docutils python-feedparser \
+python-gdata python-geoip python-gevent python-imaging python-jinja2 python-ldap python-libxslt1 \
+python-lxml python-mako python-mock python-openid python-passlib python-psutil python-psycopg2 \
+python-pybabel python-pychart python-pydot python-pyparsing python-pypdf python-reportlab python-requests \
+python-simplejson python-tz python-unicodecsv python-unittest2 python-vatnumber python-vobject \
+python-werkzeug python-xlwt python-yaml wkhtmltopdf -y
+apt-get --purge remove javascript-common -y
+
+#Install Web Dependencies
+apt-get install -y npm
+apt-get --purge remove javascript-common -y
+sudo ln -s /usr/bin/nodejs /usr/bin/node
+sudo npm install -g less less-plugin-clean-css
+
+# Next steps: 
+## install and configure postgres
+## check paths, set odoo configuration files, set odoo startup
