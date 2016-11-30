@@ -5,7 +5,12 @@ echo "Step 1 - Prepare the system, and download the odoo source"
 sudo apt-get update -y
 #and upgrade:
 sudo apt-get upgrade -y
+
 #Create a new user called odoo with home directory /opt/odoo and the group odoo. 
 sudo adduser --system --home=/opt/odoo --group odoo
 #and create a new directory for Odoo in the /var/lib/ directory.
 mkdir -p /var/lib/odoo
+
+#Install GIT and download odoo
+sudo apt-get install git -y
+git clone https://github.com/odoo/odoo.git
