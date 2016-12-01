@@ -15,12 +15,16 @@ python-simplejson python-tz python-unicodecsv python-unittest2 python-vatnumber 
 python-werkzeug python-xlwt python-yaml wkhtmltopdf -y
 apt-get --purge remove javascript-common -y
 
-#Install Web Dependencies
+# Install Web Dependencies
 apt-get install -y npm
 apt-get --purge remove javascript-common -y
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 sudo npm install -g less less-plugin-clean-css
 
+# Move odoo installation to the /opt/odoo folder
+mv odoo /opt
+
 # Next steps: 
 ## install and configure postgres
-## check paths, set odoo configuration files, set odoo startup
+## set odoo configuration files
+## set odoo startup
