@@ -2,3 +2,12 @@
 ## set odoo startup
 ## set nginx as reverse proxy ; https://www.howtoforge.com/tutorial/install-odoo-erp-software-on-ubuntu-16-04/#step-install-and-configure-postgresql
 ## instalar odoo-brasil ; https://github.com/Trust-Code/odoo-brasil
+
+# set odoo config file
+cd /opt/odoo
+sudo wget https://raw.githubusercontent.com/Trust-Code/Tutorial-Instalacao/master/odoo-config
+echo "CHANGE ODOO DATABASE"
+sudo nano odoo-config
+
+# run odoo
+./odoo-bin --config=odoo-config
