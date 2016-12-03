@@ -1,5 +1,67 @@
 #! /bin/bash
 
+#update the Ubuntu package lists:
+sudo apt-get update -y
+#and upgrade:
+sudo apt-get upgrade -y
+
+#Deve-se agora definir as configurações locais (Locale) do servidor. No terminal, execute os 4 comandos a seguir:
+export LANGUAGE=pt_BR.UTF-8
+export LANG=pt_BR.UTF-8
+sudo locale-gen pt_BR pt_BR.UTF-8
+sudo dpkg-reconfigure locales
+#Caso esteja acessando o servidor via SSH, após os comandos acima, desconecte-se (logout) e conecte-se novamente (login).
+exit
+
+#Crie o usuário “odoo” e que será o proprietário da aplicação e a sua respectiva pasta: (me parece que nao e necessario)
+sudo adduser --system --home=/opt/odoo --group odoo
+#Instalar e configurar o serviço de banco de dados PostgreSQL:
+sudo apt-get install postgresql -y
+#Deve-se agora configurar o usuário “odoo” no postgres, para isso, altere o usuário atual para postgres, a fim de ter os privilégios necessários para configurar a base de dados:
+sudo su - postgres
+#Agora, crie o novo usuário do banco de dados. O usuário “odoo” terá direitos de acesso para se conectar, criar e eliminar bancos de dados. Anote a senha definida aqui, pois será necessário mais adiante:
+createuser --createdb --username postgres --no-createrole --no-superuser --pwprompt odoo
+#Saia do usuário postgres:
+exit
+
+#Instalar git:
+sudo apt-get install git -y
+#pip
+sudo apt-get install python-pip -y
+#virtualenv
+sudo apt-get install python-virtualenv -y
+#the Odoo system dependencies: https://www.odoo.com/documentation/8.0/setup/install.html ## Instale as bibliotecas Python necessárias para o Odoo:
+sudo apt-get install python-dev python-yaml python-feedparser python-geoip python-imaging python-pybabel python-unicodecsv wkhtmltopdf libxml2-dev libxmlsec1-dev python-argparse python-babel python-cups python-dateutil python-decorator python-docutils python-feedparser python-gdata python-gevent python-greenlet python-jinja2 python-libxslt1 python-lxml python-mako python-markupsafe python-mock python-openid python-passlib python-psutil python-psycopg2 python-pychart python-pydot python-pyparsing python-pypdf python-ldap python-yaml python-reportlab python-requests python-simplejson python-six python-tz python-unittest2 python-vatnumber python-vobject python-webdav python-werkzeug python-wsgiref python-xlwt python-zsi python-dev libpq-dev poppler-utils python-pdftools antiword -y
+#Instale as bibliotecas Python necessárias para o Odoo:
+sudo apt-get install python-setuptools -y #Para Python v3 (python3-setuptools)
+sudo pip install pyserial==2.7
+sudo pip install psycogreen==1.0
+sudo pip install pyusb==1.0.0b1
+sudo pip install qrcode==5.0.1
+sudo pip install Pillow==2.5.1
+sudo pip install boto==2.38.0
+sudo pip install oerplib==0.8.4
+sudo pip install jcconv==0.2.3
+sudo pip install pytz==2014.4
+#Para a instalação do WKHTMLtoPDF, necessário para geração dos arquivos PDF, deve-se escolher o download de acordo com o sistema operacional e arquitetura de seu sistema em http://wkhtmltopdf.org/downloads.html ou em http://download.gna.org/wkhtmltopdf/0.12/ . No nosso caso, o sistema operacional é Ubuntu 14.04 (Trusty) e a arquitetura é 64 bits. No momento, somente a versão 0.12.1 está funcional.
+cd /tmp
+wget http://download.gna.org/wkhtmltopdf/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb #Altere o download se necessário
+sudo dpkg -i wkhtmltox-0.12.1_linux-trusty-amd64.deb
+sudo cp /usr/local/bin/wkhtmltopdf /usr/bin
+sudo cp /usr/local/bin/wkhtmltoimage /usr/bin
+#Confira a versao do wkhtmltopdf, digitando o seguinte comando no terminal:
+wkhtmltopdf --version # Se a versao for 0.12.1, esta correta.
+
+
+
+#Let's first create a virtualenv and install Odoo:
+
+virtualenv odoo
+. odoo/bin/activate
+pip install -r https://raw.githubusercontent.com/odoo/odoo/8.0/requirements.txt
+pip install https://nightly.odoo.com/8.0/nightly/src/odoo_8.0.latest.zip
+
+
 echo "Step 1 - Prepare the system, and download the odoo source"
 #update the Ubuntu package lists:
 sudo apt-get update -y
