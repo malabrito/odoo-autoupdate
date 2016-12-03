@@ -1,11 +1,8 @@
 #! /bin/bash
 
-#update the Ubuntu package lists:
-sudo apt-get update -y
-#and upgrade:
-sudo apt-get upgrade -y
+### tentativa de instalar a funcionalidade odoo-autodiscover: https://pypi.python.org/pypi/odoo-autodiscover / https://odoo-community.org/blog/oca-news-1/post/installing-oca-addons-the-easy-way-32#blog_content
 
-#Deve-se agora definir as configurações locais (Locale) do servidor. No terminal, execute os 4 comandos a seguir:
+#Deve-se antes de tudo definir as configurações locais (Locale) do servidor. No terminal, execute os 4 comandos a seguir:
 export LANGUAGE=pt_BR.UTF-8
 export LANG=pt_BR.UTF-8
 sudo locale-gen pt_BR pt_BR.UTF-8
@@ -13,66 +10,116 @@ sudo dpkg-reconfigure locales
 #Caso esteja acessando o servidor via SSH, após os comandos acima, desconecte-se (logout) e conecte-se novamente (login).
 exit
 
-#Crie o usuário “odoo” e que será o proprietário da aplicação e a sua respectiva pasta: (me parece que nao e necessario)
-sudo adduser --system --home=/opt/odoo --group odoo
-#Instalar e configurar o serviço de banco de dados PostgreSQL:
-sudo apt-get install postgresql -y
-#Deve-se agora configurar o usuário “odoo” no postgres, para isso, altere o usuário atual para postgres, a fim de ter os privilégios necessários para configurar a base de dados:
+### Ready The Server (https://blog.laslabs.com/2015/09/installing-odoo-8-from-source-ubuntu/)
+## Standard procedure when beginning any install is to update your package repos and installations
+
+#update the Ubuntu package lists:
+sudo apt-get update -y
+#and upgrade:
+sudo apt-get upgrade -y
+
+#Install build dependencies
+sudo apt-get install -y git python-virtualenv postgresql-9.* \
+ postgresql postgresql-server-dev-9.* postgresql-client-9.* \
+ libxml2-dev libjpeg-dev libldap2-dev libsasl2-dev libxslt1-dev \
+ python-dev libtiff5-dev nano
+ 
+ 
+## Configure Database 
+# Deve-se agora configurar o usuário “odoo” no postgres, para isso, altere o usuário atual para postgres, a fim de ter os privilégios necessários para configurar a base de dados:
 sudo su - postgres
 #Agora, crie o novo usuário do banco de dados. O usuário “odoo” terá direitos de acesso para se conectar, criar e eliminar bancos de dados. Anote a senha definida aqui, pois será necessário mais adiante:
 createuser --createdb --username postgres --no-createrole --no-superuser --pwprompt odoo
 #Saia do usuário postgres:
 exit
 
-#Instalar git:
-sudo apt-get install git -y
-#pip
-sudo apt-get install python-pip -y
-#virtualenv
-sudo apt-get install python-virtualenv -y
-#the Odoo system dependencies: https://www.odoo.com/documentation/8.0/setup/install.html ## Instale as bibliotecas Python necessárias para o Odoo:
-sudo apt-get install python-dev python-yaml python-feedparser python-geoip python-imaging python-pybabel python-unicodecsv wkhtmltopdf libxml2-dev libxmlsec1-dev python-argparse python-babel python-cups python-dateutil python-decorator python-docutils python-feedparser python-gdata python-gevent python-greenlet python-jinja2 python-libxslt1 python-lxml python-mako python-markupsafe python-mock python-openid python-passlib python-psutil python-psycopg2 python-pychart python-pydot python-pyparsing python-pypdf python-ldap python-yaml python-reportlab python-requests python-simplejson python-six python-tz python-unittest2 python-vatnumber python-vobject python-webdav python-werkzeug python-wsgiref python-xlwt python-zsi python-dev libpq-dev poppler-utils python-pdftools antiword -y
-#Instale as bibliotecas Python necessárias para o Odoo:
-sudo apt-get install python-setuptools -y #Para Python v3 (python3-setuptools)
-sudo pip install pyserial==2.7
-sudo pip install psycogreen==1.0
-sudo pip install pyusb==1.0.0b1
-sudo pip install qrcode==5.0.1
-sudo pip install Pillow==2.5.1
-sudo pip install boto==2.38.0
-sudo pip install oerplib==0.8.4
-sudo pip install jcconv==0.2.3
-sudo pip install pytz==2014.4
-#Para a instalação do WKHTMLtoPDF, necessário para geração dos arquivos PDF, deve-se escolher o download de acordo com o sistema operacional e arquitetura de seu sistema em http://wkhtmltopdf.org/downloads.html ou em http://download.gna.org/wkhtmltopdf/0.12/ . No nosso caso, o sistema operacional é Ubuntu 14.04 (Trusty) e a arquitetura é 64 bits. No momento, somente a versão 0.12.1 está funcional.
-cd /tmp
-wget http://download.gna.org/wkhtmltopdf/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb #Altere o download se necessário
-sudo dpkg -i wkhtmltox-0.12.1_linux-trusty-amd64.deb
-sudo cp /usr/local/bin/wkhtmltopdf /usr/bin
-sudo cp /usr/local/bin/wkhtmltoimage /usr/bin
-#Confira a versao do wkhtmltopdf, digitando o seguinte comando no terminal:
-wkhtmltopdf --version # Se a versao for 0.12.1, esta correta.
 
-
-
-#Let's first create a virtualenv and install Odoo:
-
-virtualenv odoo
-. odoo/bin/activate
-pip install -r https://raw.githubusercontent.com/odoo/odoo/8.0/requirements.txt
-pip install https://nightly.odoo.com/8.0/nightly/src/odoo_8.0.latest.zip
-
-
-echo "Step 1 - Prepare the system, and download the odoo source"
-#update the Ubuntu package lists:
-sudo apt-get update -y
-#and upgrade:
-sudo apt-get upgrade -y
-
-#Create a new user called odoo with home directory /opt/odoo and the group odoo. 
+## Install Odoo    
+# Create the Odoo user
 sudo adduser --system --home=/opt/odoo --group odoo
-#and create a new directory for Odoo in the /var/lib/ directory.
-mkdir -p /var/lib/odoo
+#Checkout the Odoo 8.0 branch from GitHub into the install directory
+sudo git clone https://www.github.com/odoo/odoo --depth 1 --branch 8.0 --single-branch /opt/odoo
+#Update owner to Odoo system user
+sudo chown -R odoo: /opt/odoo
+#Switch to the Odoo system user so that we don’t have to worry about permissions anymore. We need to explicitly define /bin/bash as a shell due to the user not having a shell (this is a good thing)
+sudo su - odoo -s /bin/bash
+#Change to the install directory and create a Python Virtual Environment for dependency isolation
+cd /opt/odoo &&
+virtualenv ./_venv
+#Edit odoo.py and change the shebang on the top line to use the Python in the VirtualEnv : #!/opt/odoo/_venv/bin/python
+nano odoo.py 
+#Activate the VirtualEnv, install the Python dependencies, then install Odoo
+source ./_venv/bin/activate &&
+pip install -r ./requirements.txt &&
+pip install ./
+#If you are developing modules and need Odoo to run tests, you will also need anybox.testing.openerp
+#pip install anybox.testing.openerp
+#Exit the Odoo user
+exit
 
-#Install GIT and download odoo
-sudo apt-get install git -y
-git clone https://github.com/odoo/odoo.git
+
+## Configure Odoo 
+# Make the configuration file directory
+# sudo mkdir /etc/odoo
+#Copy the sample config to its final location. Update the permissions for security (it will be holding passwords)
+sudo cp /opt/odoo/debian/openerp-server.conf /opt/odoo/odoo.conf &&
+sudo chmod 640 /opt/odoo/odoo.conf &&
+sudo chown odoo: /opt/odoo/odoo.conf
+
+#Edit the configuration file, make it look something like the below (adding in your password). The admin_password is used when performing database operations from the database management portal ($ODOO_BASE_URI/web/database/manager) – such as creations, backups, and drops.
+# [options]
+# admin_passwd = ANOTHER_SUPER_SECRET_PASSWORD_TO_CREATE
+# db_host = False
+# db_port = False
+# db_user = odoo
+# db_password = MY_SUPER_SECRET_DATABASE_PASSWORD
+# addons_path = /opt/odoo/addons
+# logfile = /var/log/odoo-server.log
+
+#Verify that the server runs manually. Use CTRL+C to exit the prompt.
+sudo su - odoo -s /bin/bash
+source /opt/odoo/_venv/bin/activate
+/opt/odoo/openerp-server
+
+# Exit Odoo user session
+exit
+exit
+
+
+### Allow Automatic Booting 
+# Copy the sample init script to the init folder, and set permissions
+sudo cp /opt/odoo/debian/init /etc/init.d/odoo &&
+sudo chmod 755 /etc/init.d/odoo &&
+sudo chown root: /etc/init.d/odoo
+# Make appropriate alterations for our environment by editing /etc/init.d/odoo and replacing the variable declarations at the top with the following instead
+# PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+# DAEMON=/opt/odoo/odoo.py
+# NAME=odoo
+# DESC=odoo
+# CONFIG=/opt/odoo/odoo.conf
+# LOGFILE=/var/log/odoo-server.log
+# PIDFILE=/var/run/${NAME}.pid
+# USER=odoo
+# export LOGNAME=$USER
+
+#In both the init script and config file, we have a log path defined. It doesn’t exist yet, and the Odoo system user will need read/write access to it
+sudo mkdir /var/log/odoo &&
+sudo chown odoo:root /var/log/odoo
+
+
+### Test (ainda nao feito)
+#Start the server
+sudo /etc/init.d/odoo start
+Test the server by going to http://ip-or-domain-of-server:8069
+#If there are errors, check the logs – less /var/log/odoo/odoo-server.log
+#Stop the server (once everything works)
+
+sudo /etc/init.d/odoo stop
+#Allow for automatic booting (as described on StackOverflow)
+sudo update-rc.d odoo defaults
+#Start Odoo through system services
+sudo service odoo start
+
+
+###################################
+
